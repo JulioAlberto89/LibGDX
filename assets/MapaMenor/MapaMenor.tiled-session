@@ -1,0 +1,50 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "D:/Videojuego/LibGDXSeg/assets/Mapa.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Todos los archivos (*)",
+    "fileStates": {
+        "D:/Videojuego/LibGDXSeg/assets/Mapa.tmx": {
+            "scale": 1.0875520833333332,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 480.8965087878933,
+                "y": 320.4444231598104
+            }
+        },
+        "D:/Videojuego/LibGDXSeg/assets/Terreno.tsx": {
+            "scaleInDock": 1
+        },
+        "Mapa.tmx": {
+            "scale": 0.8332291666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 479.45993249156146,
+                "y": 319.8399799974997
+            }
+        },
+        "Terreno.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "D:/Videojuego/MapaMenor",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "Mapa.tmx",
+        "Terreno.tsx",
+        "D:/Videojuego/LibGDXSeg/assets/Mapa.tmx"
+    ],
+    "project": "MapaMenor.tiled-project",
+    "recentFiles": [
+        "Mapa.tmx",
+        "Terreno.tsx",
+        "D:/Videojuego/LibGDXSeg/assets/Mapa.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
