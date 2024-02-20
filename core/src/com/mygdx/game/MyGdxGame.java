@@ -146,7 +146,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         alturaPantalla = Gdx.graphics.getHeight();
 
         //Creamos una cámara que mostrará una zona del mapa (igual en todas las plataformas)
-        int anchoCamara = 400, altoCamara = 240;
+        int anchoCamara = 600, altoCamara = 360;
         camara = new OrthographicCamera(anchoCamara, altoCamara);
 
         //Actualizamos la posición de la cámara
@@ -192,7 +192,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         cuentaTesoros = 0;
 
         //Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-        velocidadJugador = 0.75f;
+        velocidadJugador = 2.25f;
     }
 
     @Override
