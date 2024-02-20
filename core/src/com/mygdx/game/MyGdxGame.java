@@ -16,6 +16,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -87,7 +88,34 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     private Animation<TextureRegion> jugadorAbajo;
     private Animation<TextureRegion> jugadorIzquierda;
     public int cuentaTesoros;
+
     /////////////////////////////////////////////////////////////
+
+    //variable que controla el avance de tiempo para los npc
+    private float stateTimeNPC;
+
+    //Jugadores no principales
+    private Texture[] imgNPC;
+
+    //Array de animaciones activas de los npc
+    private Animation[] npc;
+
+    //Array de animaciones de los NPC para cada dirección
+    private Animation[] npcArriba;
+    private Animation[] npcDerecha;
+    private Animation[] npcAbajo;
+    private Animation[] npcIzquierda;
+
+    //Numero de NPC que hay en el juego
+    private static final int numeroNPC = 1;
+    //Posiciones de los NPC
+    private Vector2[] posicionNPC;
+    //Posiciones iniciales
+    private Vector2[] origen;
+    //Posiciones finales
+    private Vector2[] destino;
+    //Velocidad de desplazamiento de los NPC
+    private float velocidadNPC;
 
     @Override
     public void create() {
@@ -158,7 +186,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //Ponemos a cero el atributo stateTime, que marca el tiempo de ejecución de la animación del personaje principal
         stateTime = 0f;
         //Cargamos la imagen del personaje principal en el objeto img de la clase Texture
-        imagenPrincipal = new Texture(Gdx.files.internal("Warrior_Blue_DD.png"));
+        imagenPrincipal = new Texture(Gdx.files.internal("Warrior_Blue_DD_Ref.png"));
 
         //Sacamos los frames de img en un array bidimensional de TextureRegion
         TextureRegion[][] tmp = TextureRegion.split(imagenPrincipal, imagenPrincipal.getWidth() / FRAME_COLS, imagenPrincipal.getHeight() / FRAME_ROWS);
@@ -193,6 +221,78 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
         velocidadJugador = 2.25f;
+        ////////////////////////////////////////////////////////////////////////
+        //Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
+        stateTimeNPC = 0f;
+
+        //Velocidad de los NPC
+        velocidadNPC = 0.75f; //Vale cualquier múltiplo de 0.25f
+        //Creamos arrays de animaciones para los NPC
+        //Las animaciones activas
+        npc = new Animation[numeroNPC];
+
+        //Las animaciones direccionales
+        npcAbajo = new Animation[numeroNPC];
+        npcIzquierda = new Animation[numeroNPC];
+        npcDerecha = new Animation[numeroNPC];
+        npcArriba = new Animation[numeroNPC];
+
+        //Posiciones actuales, origen y destino de los npc
+        posicionNPC = new Vector2[numeroNPC];
+        origen = new Vector2[numeroNPC];
+        destino = new Vector2[numeroNPC];
+
+        //Creamos los arrays (filas) de imágenes para cada npc extrayéndolos
+        //de las imágenes png de los distintos sprites
+
+        //Array de imágenes para cada npc
+        imgNPC = new Texture[numeroNPC];
+
+        //Imágenes de cada npc
+        imgNPC[0] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
+        //imgNPC[1] = new Texture(Gdx.files.internal("sprites/npc2.png"));
+        //imgNPC[2] = new Texture(Gdx.files.internal("sprites/npc3.png"));
+        //imgNPC[3] = new Texture(Gdx.files.internal("sprites/npc4.png"));
+        //imgNPC[4] = new Texture(Gdx.files.internal("sprites/npc5.png"));
+
+        //Extraemos los frames de cada imagen en tmp[][]
+        for (int i = 0; i < numeroNPC; i++) {
+            //Sacamos los frames de img en un array de TextureRegion
+            tmp = TextureRegion.split(imgNPC[i], imgNPC[i].getWidth() / FRAME_COLS, imgNPC[i].getHeight() / FRAME_ROWS);
+
+            //Creamos las distintas animaciones, teniendo en cuenta el tiempo entre frames
+            float frameNPC = 0.15f;
+
+            npcAbajo[i] = new Animation<>(frameNPC, tmp[0]);
+            npcAbajo[i].setPlayMode(Animation.PlayMode.LOOP);
+            npcIzquierda[i] = new Animation<>(frameNPC, tmp[1]);
+            npcIzquierda[i].setPlayMode(Animation.PlayMode.LOOP);
+            npcDerecha[i] = new Animation<>(frameNPC, tmp[0]);
+            npcDerecha[i].setPlayMode(Animation.PlayMode.LOOP);
+            npcArriba[i] = new Animation<>(frameNPC, tmp[0]);
+            npcArriba[i].setPlayMode(Animation.PlayMode.LOOP);
+
+            //Las animaciones activas iniciales de todos los npc las seteamos en dirección abajo
+            npc[i] = npcAbajo[i];
+        }
+
+        //RECORRIDO DE LOS NPC. Indicamos las baldosas de inicio y fin de su recorrido y  usamos
+        //la funcion posicionaMapa para traducirlo a puntos del mapa.
+        origen[0] = posicionaMapa(new Vector2(10, 2));
+        destino[0] = posicionaMapa(new Vector2(10, 5));
+        //origen[1] = posicionaMapa(new Vector2(12, 10));
+        //destino[1] = posicionaMapa(new Vector2(14, 10));
+        //origen[2] = posicionaMapa(new Vector2(17, 3));
+        //destino[2] = posicionaMapa(new Vector2(15, 3));
+        //origen[3] = posicionaMapa(new Vector2(18, 10));
+        //destino[3] = posicionaMapa(new Vector2(21, 10));
+        //origen[4] = posicionaMapa(new Vector2(23, 8));
+        //destino[4] = posicionaMapa(new Vector2(23, 5));
+        //POSICION INICIAL DE LOS NPC
+        for (int i = 0; i < numeroNPC; i++) {
+            posicionNPC[i] = new Vector2();
+            posicionNPC[i].set(origen[i]);
+        }
     }
 
     @Override
@@ -233,6 +333,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         // Indicamos al SpriteBatch que se muestre en el sistema de coordenadas específicas de la cámara.
         sb.setProjectionMatrix(camara.combined);
 
+        stateTimeNPC += Gdx.graphics.getDeltaTime();
+
         //Inicializamos el objeto SpriteBatch
         sb.begin();
 
@@ -240,10 +342,21 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         TextureRegion cuadroActual = jugador.getKeyFrame(stateTime);
         sb.draw(cuadroActual, posicionJugador.x, posicionJugador.y);
 
+        // Deteccion de colisiones con NPC
+        detectaColisiones();
+
         //Pintamos la capa de profundidad del mapa de baldosas.
         capas = new int[1];
         capas[0] = 4; //Número de la capa de profundidad
         mapaRenderer.render(capas);
+
+        //////////////////////////////////////////////////////
+        //Dibujamos las animaciones de los NPC
+        for (int i = 0; i < numeroNPC; i++) {
+            actualizaPosicionNPC(i);
+            cuadroActual = (TextureRegion) npc[i].getKeyFrame(stateTimeNPC);
+            sb.draw(cuadroActual, posicionNPC[i].x, posicionNPC[i].y);
+        }
 
         //Finalizamos el objeto SpriteBatch
         sb.end();
@@ -309,6 +422,27 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 e.printStackTrace();
             }
             //Código del final del juego
+        }
+
+        ///////////////////////////////////////////////////////////////////
+        //Deteccion de tesoros: calculamos la celda en la que se encuentran los límites de la zona de contacto.
+        int limIzq = (int) ((posicionJugador.x + 0.25 * anchoJugador) / anchoCelda);
+        int limDrcha = (int) ((posicionJugador.x + 0.75 * anchoJugador) / anchoCelda);
+        int limSup = (int) ((posicionJugador.y + 0.25 * altoJugador) / altoCelda);
+        int limInf = (int) ((posicionJugador.y) / altoCelda);
+
+        //Límite inferior izquierdo
+        if (tesoro[limIzq][limInf]) {
+            TiledMapTileLayer.Cell celda = capaTesoros.getCell(limIzq, limInf);
+            celda.setTile(null);
+            tesoro[limIzq][limInf] = false;
+            cuentaTesoros++;
+        } //Límite superior derecho
+        else if (tesoro[limDrcha][limSup]) {
+            TiledMapTileLayer.Cell celda = capaTesoros.getCell(limDrcha, limSup);
+            celda.setTile(null);
+            tesoro[limDrcha][limSup] = false;
+            cuentaTesoros++;
         }
     }
 
@@ -453,7 +587,58 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     }
 
     //////////////////////////////////////////////////////////////
+    //Método que permite actualizar la posición de los NPC para cada iteración
+//Los npc harán un recorrido de izquierda a derecha y volver, o de arriba a abajo y volver.
+    private void actualizaPosicionNPC(int i) {
 
+        if (posicionNPC[i].y < destino[i].y) {
+            posicionNPC[i].y += velocidadNPC;
+            npc[i] = npcArriba[i];
+        }
+        if (posicionNPC[i].y > destino[i].y) {
+            posicionNPC[i].y -= velocidadNPC;
+            npc[i] = npcAbajo[i];
+        }
+        if (posicionNPC[i].x < destino[i].x) {
+            posicionNPC[i].x += velocidadNPC;
+            npc[i] = npcDerecha[i];
+        }
+        if (posicionNPC[i].x > destino[i].x) {
+            posicionNPC[i].x -= velocidadNPC;
+            npc[i] = npcIzquierda[i];
+        }
+
+        posicionNPC[i].x = MathUtils.clamp(posicionNPC[i].x, 0, anchoMapa - anchoJugador);
+        posicionNPC[i].y = MathUtils.clamp(posicionNPC[i].y, 0, altoMapa - altoJugador);
+
+        //Dar la vuelta al NPC cuando llega a un extremo
+        if (posicionNPC[i].epsilonEquals(destino[i])) {
+            destino[i].set(origen[i]);
+            origen[i].set(posicionNPC[i]);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////
+    //Método que detecta si se producen colisiones usando rectángulos
+    private void detectaColisiones() {
+        //Vamos a comprobar que el rectángulo de contacto del jugador
+        //no se solape con el rectángulo de contacto del npc
+        Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.25 * anchoJugador), (float) (posicionJugador.y + 0.25 * altoJugador),
+                (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
+        Rectangle rNPC;
+        //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
+        for (int i = 0; i < numeroNPC; i++) {
+            rNPC = new Rectangle((float) (posicionNPC[i].x + 0.1 * anchoJugador), (float) (posicionNPC[i].y + 0.1 * altoJugador),
+                    (float) (0.8 * anchoJugador), (float) (0.8 * altoJugador));
+            //Si hay colision
+            if (rJugador.overlaps(rNPC)) {
+                //Código de fin de partida
+                System.out.println("Fin de la partida");
+                posicionJugador.set(posicionaMapa(celdaInicial));
+                return; //Acabamos el bucle si hay una sola colisión
+            }
+        }//Si no hay colisión no se hace nada
+    }
 
     @Override
     public void dispose() {
@@ -465,5 +650,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //SpriteBatch
         if (sb.isDrawing())
             sb.dispose();
+
+        /////////////////
+        imgNPC[0].dispose();
+        imgNPC[1].dispose();
+        imgNPC[2].dispose();
+        imgNPC[3].dispose();
+        imgNPC[4].dispose();
     }
 }
