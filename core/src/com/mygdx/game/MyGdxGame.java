@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -116,12 +117,18 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     private Vector2[] destino;
     //Velocidad de desplazamiento de los NPC
     private float velocidadNPC;
+    //Elementos para la musica
+    private Music musicaJuego;
 
     @Override
     public void create() {
         //Cargamos el mapa de baldosas desde la carpeta de assets
         mapa = new TmxMapLoader().load("Mapa.tmx");
         mapaRenderer = new OrthogonalTiledMapRenderer(mapa);
+
+        //Inicializamos la musica de fondo del juego
+        musicaJuego = Gdx.audio.newMusic(Gdx.files.internal("Music/416632__sirkoto51__castle-music-loop-1.wav"));
+        musicaJuego.setLooping(true);
 
         //Determinamos el alto y ancho del mapa de baldosas. Para ello necesitamos extraer la capa
         //base del mapa y, a partir de ella, determinamos el número de celdas a lo ancho y alto,
@@ -166,7 +173,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         }
 
         //Posiciones inicial y final del recorrido
-        Vector2 celdaInicial = new Vector2(0, 0);
+        Vector2 celdaInicial = new Vector2(2, 5);
         celdaFinal = new Vector2(24, 1);
 
         //Inicializamos la cámara del juego
@@ -250,7 +257,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Imágenes de cada npc
         imgNPC[0] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
-        //imgNPC[1] = new Texture(Gdx.files.internal("sprites/npc2.png"));
+        //imgNPC[1] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
         //imgNPC[2] = new Texture(Gdx.files.internal("sprites/npc3.png"));
         //imgNPC[3] = new Texture(Gdx.files.internal("sprites/npc4.png"));
         //imgNPC[4] = new Texture(Gdx.files.internal("sprites/npc5.png"));
@@ -280,8 +287,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //la funcion posicionaMapa para traducirlo a puntos del mapa.
         origen[0] = posicionaMapa(new Vector2(10, 2));
         destino[0] = posicionaMapa(new Vector2(10, 5));
-        //origen[1] = posicionaMapa(new Vector2(12, 10));
-        //destino[1] = posicionaMapa(new Vector2(14, 10));
+        //origen[1] = posicionaMapa(new Vector2(41, 25));
+        //destino[1] = posicionaMapa(new Vector2(41, 33));
         //origen[2] = posicionaMapa(new Vector2(17, 3));
         //destino[2] = posicionaMapa(new Vector2(15, 3));
         //origen[3] = posicionaMapa(new Vector2(18, 10));
@@ -345,10 +352,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         // Deteccion de colisiones con NPC
         detectaColisiones();
 
-        //Pintamos la capa de profundidad del mapa de baldosas.
-        capas = new int[1];
-        capas[0] = 4; //Número de la capa de profundidad
-        mapaRenderer.render(capas);
+        //Reproducimos la musica del juego
+        if (!musicaJuego.isPlaying())
+            musicaJuego.play();
+
 
         //////////////////////////////////////////////////////
         //Dibujamos las animaciones de los NPC
@@ -360,6 +367,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Finalizamos el objeto SpriteBatch
         sb.end();
+        //////////////////////
+        //Pintamos la capa de profundidad del mapa de baldosas.
+        capas = new int[1];
+        capas[0] = 4; //Número de la capa de profundidad
+        mapaRenderer.render(capas);
     }
 
     private Vector2 posicionaMapa(Vector2 celda) {
@@ -612,7 +624,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         posicionNPC[i].y = MathUtils.clamp(posicionNPC[i].y, 0, altoMapa - altoJugador);
 
         //Dar la vuelta al NPC cuando llega a un extremo
-        if (posicionNPC[i].epsilonEquals(destino[i])) {
+        if (posicionNPC[i].epsilonEquals(destino[i],0.5f)) {
             destino[i].set(origen[i]);
             origen[i].set(posicionNPC[i]);
         }
@@ -657,5 +669,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         imgNPC[2].dispose();
         imgNPC[3].dispose();
         imgNPC[4].dispose();
+
+        //Music
+        musicaJuego.dispose();
     }
 }
