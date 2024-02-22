@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -120,15 +121,36 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     //Elementos para la musica
     private Music musicaJuego;
 
+    //Elementos para los sonidos
+    private Sound tesoroEncontrado;
+    private Sound pillado;
+    private Sound fracaso;
+    private Sound exito;
+
+    private Sound pasos;
+    private int cycle, cycle_ant;
+
     @Override
     public void create() {
         //Cargamos el mapa de baldosas desde la carpeta de assets
         mapa = new TmxMapLoader().load("Mapa.tmx");
         mapaRenderer = new OrthogonalTiledMapRenderer(mapa);
 
+        ///////////////////////Música y sonidos///////////////////////////
         //Inicializamos la musica de fondo del juego
         musicaJuego = Gdx.audio.newMusic(Gdx.files.internal("Music/416632__sirkoto51__castle-music-loop-1.wav"));
         musicaJuego.setLooping(true);
+
+        tesoroEncontrado = Gdx.audio.newSound(Gdx.files.internal("Music/242501__gabrielaraujo__powerupsuccess.wav"));
+        pillado = Gdx.audio.newSound(Gdx.files.internal("Music/580307__colorscrimsontears__slash-rpg.wav"));
+        fracaso = Gdx.audio.newSound(Gdx.files.internal("Music/173859__jivatma07__j1game_over_mono.wav"));
+        exito = Gdx.audio.newSound(Gdx.files.internal("Music/456966__funwithsound__success-fanfare-trumpets.mp3"));
+
+        //Sonido de pasos
+        pasos = Gdx.audio.newSound(Gdx.files.internal("Music/Steps.wav"));
+        cycle = 0;
+        cycle_ant = 0;//Sirven para controlar los ciclos de reproduccion del sonido pasos
+        ///////////////////////////////////////////////////////////////////
 
         //Determinamos el alto y ancho del mapa de baldosas. Para ello necesitamos extraer la capa
         //base del mapa y, a partir de ella, determinamos el número de celdas a lo ancho y alto,
@@ -173,8 +195,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         }
 
         //Posiciones inicial y final del recorrido
-        Vector2 celdaInicial = new Vector2(2, 5);
-        celdaFinal = new Vector2(24, 1);
+        Vector2 celdaInicial = new Vector2(2, 4);
+        celdaFinal = new Vector2(68, 6);
 
         //Inicializamos la cámara del juego
         anchuraPantalla = Gdx.graphics.getWidth();
@@ -413,8 +435,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         }
 
         //Avanzamos el stateTime del jugador principal cuando hay algún estado de movimiento activo
+        //Control del sonido de los pasos del jugador
         if (izquierda || derecha || arriba || abajo) {
             stateTime += Gdx.graphics.getDeltaTime();
+            cycle = (int) (stateTime / 0.6f);
+            if (cycle != cycle_ant)
+                pasos.play(0.5f);
+            cycle_ant = cycle;
         }
 
         //Limites en el mapa para el jugador
@@ -436,6 +463,23 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             //Código del final del juego
         }
 
+
+        //////////////////////////////////////////////////////////
+
+        // Detección de colisiones con NPC
+        Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.25 * anchoJugador), (float) (posicionJugador.y + 0.25 * altoJugador),
+                (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
+        Rectangle rNPC;
+        for (int i = 0; i < numeroNPC; i++) {
+            rNPC = new Rectangle((float) (posicionNPC[i].x + 0.25 * anchoJugador), (float) (posicionNPC[i].y + 0.25 * altoJugador),
+                    (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
+            if (rJugador.overlaps(rNPC)) {
+                // Hay colisión con un NPC, devolver al jugador a la celda inicial
+                posicionJugador.set(posicionaMapa(celdaInicial)); // Restablecer posición del jugador
+                // Aquí puedes agregar cualquier otra lógica que necesites para la colisión con el NPC
+            }
+        }
+
         ///////////////////////////////////////////////////////////////////
         //Deteccion de tesoros: calculamos la celda en la que se encuentran los límites de la zona de contacto.
         int limIzq = (int) ((posicionJugador.x + 0.25 * anchoJugador) / anchoCelda);
@@ -448,12 +492,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             TiledMapTileLayer.Cell celda = capaTesoros.getCell(limIzq, limInf);
             celda.setTile(null);
             tesoro[limIzq][limInf] = false;
+            tesoroEncontrado.play();
             cuentaTesoros++;
         } //Límite superior derecho
         else if (tesoro[limDrcha][limSup]) {
             TiledMapTileLayer.Cell celda = capaTesoros.getCell(limDrcha, limSup);
             celda.setTile(null);
             tesoro[limDrcha][limSup] = false;
+            tesoroEncontrado.play();
             cuentaTesoros++;
         }
     }
@@ -639,17 +685,27 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
         Rectangle rNPC;
         //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
+        //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
         for (int i = 0; i < numeroNPC; i++) {
             rNPC = new Rectangle((float) (posicionNPC[i].x + 0.1 * anchoJugador), (float) (posicionNPC[i].y + 0.1 * altoJugador),
                     (float) (0.8 * anchoJugador), (float) (0.8 * altoJugador));
             //Si hay colision
             if (rJugador.overlaps(rNPC)) {
-                //Código de fin de partida
-                System.out.println("Fin de la partida");
-                posicionJugador.set(posicionaMapa(celdaInicial));
-                return; //Acabamos el bucle si hay una sola colisión
+                //pausamos la musica, guardando el instante actual de reproducción
+                float posicionMusica = musicaJuego.getPosition();
+                musicaJuego.pause();
+                //reproducimos el sonido "pillado"
+                pillado.play();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                musicaJuego.setPosition(posicionMusica);
+                //reanudamos la musica del juego
+                musicaJuego.play();
             }
-        }//Si no hay colisión no se hace nada
+        }
     }
 
     @Override
@@ -672,5 +728,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Music
         musicaJuego.dispose();
+
+        //Sound
+        tesoroEncontrado.dispose();
+        pillado.dispose();
+        exito.dispose();
+        fracaso.dispose();
+
+        pasos.dispose();
     }
 }
