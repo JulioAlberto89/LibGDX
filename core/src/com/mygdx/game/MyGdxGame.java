@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -130,6 +131,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     private Sound pasos;
     private int cycle, cycle_ant;
 
+    //Elementos para sobreimpresionar informacion
+    private BitmapFont fontVidas;
+    private BitmapFont fontTesoros;
+    //Numero de vidas del jugador
+    private int nVidas;
+
     @Override
     public void create() {
         //Cargamos el mapa de baldosas desde la carpeta de assets
@@ -150,6 +157,19 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         pasos = Gdx.audio.newSound(Gdx.files.internal("Music/Steps.wav"));
         cycle = 0;
         cycle_ant = 0;//Sirven para controlar los ciclos de reproduccion del sonido pasos
+
+        ///////////////////////////////////////////////////////////////////
+        //Textos sobreimpresionados
+        fontVidas = new BitmapFont(Gdx.files.internal("ui/OldLondon.fnt"));
+        fontTesoros = new BitmapFont(Gdx.files.internal("ui/OldLondon.fnt"));
+
+        // Configurar el tamaño de la fuente
+        fontVidas.getData().setScale(0.5f); // Tamaño 0.5f
+        fontTesoros.getData().setScale(0.5f); // Tamaño 0.5f
+
+        cuentaTesoros = 0;
+        nVidas = 3;
+
         ///////////////////////////////////////////////////////////////////
 
         //Determinamos el alto y ancho del mapa de baldosas. Para ello necesitamos extraer la capa
@@ -394,6 +414,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         capas = new int[1];
         capas[0] = 4; //Número de la capa de profundidad
         mapaRenderer.render(capas);
+
+        /////////////HUD//////////////
+        String infoTesoros = "Tesoros: " + cuentaTesoros;
+        String infoVidas = "Vidas: " + nVidas;
+        sb.begin();
+        fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
+        fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
+        sb.end();
     }
 
     private Vector2 posicionaMapa(Vector2 celda) {
@@ -476,7 +504,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             if (rJugador.overlaps(rNPC)) {
                 // Hay colisión con un NPC, devolver al jugador a la celda inicial
                 posicionJugador.set(posicionaMapa(celdaInicial)); // Restablecer posición del jugador
-                // Aquí puedes agregar cualquier otra lógica que necesites para la colisión con el NPC
+                return; // Termina la actualización aquí para evitar que se sobrescriba la posición del jugador
             }
         }
 
@@ -736,5 +764,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         fracaso.dispose();
 
         pasos.dispose();
+
+        //Elementos para sobreimpresionar informacion
+        fontVidas.dispose();
+        fontTesoros.dispose();
     }
 }
