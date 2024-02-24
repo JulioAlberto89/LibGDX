@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -215,15 +216,15 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         }
 
         //Posiciones inicial y final del recorrido
-        Vector2 celdaInicial = new Vector2(2, 4);
-        celdaFinal = new Vector2(68, 6);
+        celdaInicial = new Vector2(2, 4);
+        celdaFinal = new Vector2(67, 7);
 
         //Inicializamos la cámara del juego
         anchuraPantalla = Gdx.graphics.getWidth();
         alturaPantalla = Gdx.graphics.getHeight();
 
         //Creamos una cámara que mostrará una zona del mapa (igual en todas las plataformas)
-        int anchoCamara = 600, altoCamara = 360;
+        int anchoCamara = 700, altoCamara = 420;
         camara = new OrthographicCamera(anchoCamara, altoCamara);
 
         //Actualizamos la posición de la cámara
@@ -235,7 +236,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //Ponemos a cero el atributo stateTime, que marca el tiempo de ejecución de la animación del personaje principal
         stateTime = 0f;
         //Cargamos la imagen del personaje principal en el objeto img de la clase Texture
-        imagenPrincipal = new Texture(Gdx.files.internal("Warrior_Blue_DD_Ref.png"));
+        imagenPrincipal = new Texture(Gdx.files.internal("Warrior_Blue_DD_ajustado.png"));
 
         //Sacamos los frames de img en un array bidimensional de TextureRegion
         TextureRegion[][] tmp = TextureRegion.split(imagenPrincipal, imagenPrincipal.getWidth() / FRAME_COLS, imagenPrincipal.getHeight() / FRAME_ROWS);
@@ -243,8 +244,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //Creamos el objeto SpriteBatch que nos permitirá crear animaciones dentro del método render()
         sb = new SpriteBatch();
         //Tile Inicial y Final
-        celdaInicial = new Vector2(0, 0);
-        celdaFinal = new Vector2(24, 1); //el tile final en el mapa de ejemplo
+        //celdaInicial = new Vector2(0, 0);
+        //celdaFinal = new Vector2(24, 1); //el tile final en el mapa de ejemplo
 
         //Creamos las distintas animaciones en bucle, teniendo en cuenta que el timepo entre frames será 150 milisegundos
 
@@ -298,7 +299,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         imgNPC = new Texture[numeroNPC];
 
         //Imágenes de cada npc
-        imgNPC[0] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
+        imgNPC[0] = new Texture(Gdx.files.internal("Torch_Red_ajustado.png"));
         //imgNPC[1] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
         //imgNPC[2] = new Texture(Gdx.files.internal("sprites/npc3.png"));
         //imgNPC[3] = new Texture(Gdx.files.internal("sprites/npc4.png"));
@@ -384,6 +385,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         stateTimeNPC += Gdx.graphics.getDeltaTime();
 
+        String infoTesoros = "Tesoros: " + cuentaTesoros;
+        String infoVidas = "Vidas: " + nVidas;
         //Inicializamos el objeto SpriteBatch
         sb.begin();
 
@@ -407,6 +410,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             sb.draw(cuadroActual, posicionNPC[i].x, posicionNPC[i].y);
         }
 
+        fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
+        fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
+
+
         //Finalizamos el objeto SpriteBatch
         sb.end();
         //////////////////////
@@ -416,12 +423,21 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         mapaRenderer.render(capas);
 
         /////////////HUD//////////////
+        /*
         String infoTesoros = "Tesoros: " + cuentaTesoros;
         String infoVidas = "Vidas: " + nVidas;
         sb.begin();
         fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
         fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
         sb.end();
+
+         */
+
+        /*
+        if (posicionJugador == null) {
+            posicionJugador.set(celdaInicial);
+        }
+         */
     }
 
     private Vector2 posicionaMapa(Vector2 celda) {
@@ -486,17 +502,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+
                 e.printStackTrace();
             }
-            //Código del final del juego
+            // Aquí puedes agregar cualquier código adicional que desees ejecutar al finalizar el juego
+            Gdx.app.exit(); // Esto cierra la aplicación del juego
         }
 
 
         //////////////////////////////////////////////////////////
 
+        /*
         // Detección de colisiones con NPC
-        Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.25 * anchoJugador), (float) (posicionJugador.y + 0.25 * altoJugador),
-                (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
+        Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.4 * anchoJugador), (float) (posicionJugador.y + 0.4 * altoJugador),
+                (float) (0.2 * anchoJugador), (float) (0.2 * altoJugador));
         Rectangle rNPC;
         for (int i = 0; i < numeroNPC; i++) {
             rNPC = new Rectangle((float) (posicionNPC[i].x + 0.25 * anchoJugador), (float) (posicionNPC[i].y + 0.25 * altoJugador),
@@ -508,12 +527,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             }
         }
 
+         */
+
         ///////////////////////////////////////////////////////////////////
         //Deteccion de tesoros: calculamos la celda en la que se encuentran los límites de la zona de contacto.
+        /*
         int limIzq = (int) ((posicionJugador.x + 0.25 * anchoJugador) / anchoCelda);
         int limDrcha = (int) ((posicionJugador.x + 0.75 * anchoJugador) / anchoCelda);
         int limSup = (int) ((posicionJugador.y + 0.25 * altoJugador) / altoCelda);
         int limInf = (int) ((posicionJugador.y) / altoCelda);
+         */
+        int limIzq = (int) ((posicionJugador.x + 0.1 * anchoJugador) / anchoCelda);
+        int limDrcha = (int) ((posicionJugador.x + 0.9 * anchoJugador) / anchoCelda);
+        int limSup = (int) ((posicionJugador.y + 0.9 * altoJugador) / altoCelda);
+        int limInf = (int) ((posicionJugador.y + 0.1 * altoJugador) / altoCelda);
 
         //Límite inferior izquierdo
         if (tesoro[limIzq][limInf]) {
@@ -607,11 +634,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 break;
         }
 
+        /*
         //Para ocultar/mostrar las distintas capas pulsamos desde el 1 en adelante...
         int codigoCapa = keycode - Input.Keys.NUM_1;
         if (codigoCapa <= 4)
             mapa.getLayers().get(codigoCapa).setVisible(!mapa.getLayers().get(codigoCapa).isVisible());
-
+         */
+        //Para ocultar/mostrar las distintas capas pulsamos desde el 1 en adelante...
+        int codigoCapa = keycode - Input.Keys.NUM_1;
+        if (codigoCapa >= 0 && codigoCapa <= 4) { // Verificar que el índice sea válido
+            MapLayers mapLayers = mapa.getLayers();
+            if (mapLayers.size() > codigoCapa) { // Verificar que el índice no exceda el tamaño del array
+                mapLayers.get(codigoCapa).setVisible(!mapLayers.get(codigoCapa).isVisible());
+            }
+        }
         return true;
     }
 
@@ -706,6 +742,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
     //////////////////////////////////////////////////////////////
     //Método que detecta si se producen colisiones usando rectángulos
+
     private void detectaColisiones() {
         //Vamos a comprobar que el rectángulo de contacto del jugador
         //no se solape con el rectángulo de contacto del npc
@@ -724,11 +761,15 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 musicaJuego.pause();
                 //reproducimos el sonido "pillado"
                 pillado.play();
+
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                //posicionJugador.set(celdaInicial);
+                posicionJugador.set(posicionaMapa(celdaInicial));
                 musicaJuego.setPosition(posicionMusica);
                 //reanudamos la musica del juego
                 musicaJuego.play();
