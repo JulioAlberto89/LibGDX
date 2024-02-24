@@ -37,9 +37,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
     //Celda en la que el mapa finaliza
     private Vector2 celdaInicial, celdaFinal;
+    Vector2 ultimoCheckpointAlcanzado;
 
     //Arrays bidimensionales de booleanos que contienen los obstáculos y los tesoros del mapa
-    private boolean[][] obstaculo, tesoro;
+    private boolean[][] obstaculo, tesoro, checkpoint;
 
     //Objeto con el que se pinta el mapa de baldosas
     private TiledMapRenderer mapaRenderer;
@@ -111,7 +112,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     private Animation[] npcIzquierda;
 
     //Numero de NPC que hay en el juego
-    private static final int numeroNPC = 1;
+    private static final int numeroNPC = 4;
     //Posiciones de los NPC
     private Vector2[] posicionNPC;
     //Posiciones iniciales
@@ -128,6 +129,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
     private Sound pillado;
     private Sound fracaso;
     private Sound exito;
+    private Sound checkpointAlcanzado;
 
     private Sound pasos;
     private int cycle, cycle_ant;
@@ -153,6 +155,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         pillado = Gdx.audio.newSound(Gdx.files.internal("Music/580307__colorscrimsontears__slash-rpg.wav"));
         fracaso = Gdx.audio.newSound(Gdx.files.internal("Music/173859__jivatma07__j1game_over_mono.wav"));
         exito = Gdx.audio.newSound(Gdx.files.internal("Music/456966__funwithsound__success-fanfare-trumpets.mp3"));
+        checkpointAlcanzado = Gdx.audio.newSound(Gdx.files.internal("Music/242501__gabrielaraujo__powerupsuccess.wav"));
 
         //Sonido de pasos
         pasos = Gdx.audio.newSound(Gdx.files.internal("Music/Steps.wav"));
@@ -193,6 +196,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         TiledMapTileLayer capaPasos = (TiledMapTileLayer) mapa.getLayers().get(2);
         capaTesoros = (TiledMapTileLayer) mapa.getLayers().get(3);
         TiledMapTileLayer capaProfundidad = (TiledMapTileLayer) mapa.getLayers().get(4);
+        TiledMapTileLayer capaCheckpoint = (TiledMapTileLayer) mapa.getLayers().get(5);
 
         //El numero de tiles es igual en todas las capas. Lo tomamos de la capa Suelo
         anchoTiles = capaSuelo.getWidth();
@@ -201,6 +205,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         //Creamos un array bidimensional de booleanos para obstáculos y tesoros
         obstaculo = new boolean[anchoTiles][altoTiles];
         tesoro = new boolean[anchoTiles][altoTiles];
+        checkpoint = new boolean[anchoTiles][altoTiles];
 
         //Rellenamos los valores recorriendo el mapa
         for (int x = 0; x < anchoTiles; x++) {
@@ -212,12 +217,17 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 tesoro[x][y] = (capaTesoros.getCell(x, y) != null);
                 //contabilizamos cuántos tesoros se han incluido en el mapa
                 if (tesoro[x][y]) totalTesoros++;
+
+                // Rellenamos el array bidimensional de los checkpoints
+                checkpoint[x][y] = (capaCheckpoint.getCell(x, y) != null);
             }
         }
 
         //Posiciones inicial y final del recorrido
         celdaInicial = new Vector2(2, 4);
         celdaFinal = new Vector2(67, 7);
+        //El primer checkpoint es el punto inicial
+        ultimoCheckpointAlcanzado = celdaInicial;
 
         //Inicializamos la cámara del juego
         anchuraPantalla = Gdx.graphics.getWidth();
@@ -270,13 +280,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         cuentaTesoros = 0;
 
         //Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-        velocidadJugador = 2.25f;
+        //velocidadJugador = 2.25f;
+        velocidadJugador = 6f;
         ////////////////////////////////////////////////////////////////////////
         //Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
         stateTimeNPC = 0f;
 
         //Velocidad de los NPC
-        velocidadNPC = 0.75f; //Vale cualquier múltiplo de 0.25f
+        velocidadNPC = 1.15f; //Vale cualquier múltiplo de 0.25f
         //Creamos arrays de animaciones para los NPC
         //Las animaciones activas
         npc = new Animation[numeroNPC];
@@ -300,9 +311,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Imágenes de cada npc
         imgNPC[0] = new Texture(Gdx.files.internal("Torch_Red_ajustado.png"));
-        //imgNPC[1] = new Texture(Gdx.files.internal("Torch_Red_edit.png"));
-        //imgNPC[2] = new Texture(Gdx.files.internal("sprites/npc3.png"));
-        //imgNPC[3] = new Texture(Gdx.files.internal("sprites/npc4.png"));
+        imgNPC[1] = new Texture(Gdx.files.internal("Torch_Red_ajustado.png"));
+        imgNPC[2] = new Texture(Gdx.files.internal("Torch_Red_ajustado.png"));
+        imgNPC[3] = new Texture(Gdx.files.internal("Torch_Red_ajustado.png"));
         //imgNPC[4] = new Texture(Gdx.files.internal("sprites/npc5.png"));
 
         //Extraemos los frames de cada imagen en tmp[][]
@@ -328,14 +339,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //RECORRIDO DE LOS NPC. Indicamos las baldosas de inicio y fin de su recorrido y  usamos
         //la funcion posicionaMapa para traducirlo a puntos del mapa.
-        origen[0] = posicionaMapa(new Vector2(10, 2));
-        destino[0] = posicionaMapa(new Vector2(10, 5));
-        //origen[1] = posicionaMapa(new Vector2(41, 25));
-        //destino[1] = posicionaMapa(new Vector2(41, 33));
-        //origen[2] = posicionaMapa(new Vector2(17, 3));
-        //destino[2] = posicionaMapa(new Vector2(15, 3));
-        //origen[3] = posicionaMapa(new Vector2(18, 10));
-        //destino[3] = posicionaMapa(new Vector2(21, 10));
+        origen[0] = posicionaMapa(new Vector2(11, 3));
+        destino[0] = posicionaMapa(new Vector2(11, 7));
+        origen[1] = posicionaMapa(new Vector2(42, 3));
+        destino[1] = posicionaMapa(new Vector2(42, 9));
+        origen[2] = posicionaMapa(new Vector2(17, 25));
+        destino[2] = posicionaMapa(new Vector2(39, 25));
+        origen[3] = posicionaMapa(new Vector2(62, 16));
+        destino[3] = posicionaMapa(new Vector2(73, 16));
         //origen[4] = posicionaMapa(new Vector2(23, 8));
         //destino[4] = posicionaMapa(new Vector2(23, 5));
         //POSICION INICIAL DE LOS NPC
@@ -372,7 +383,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Dibujamos las capas del mapa
         //Posteriormente quitaremos la capa de profundidad para intercalar a los personajes
-        int[] capas = {0, 1, 2, 3, 4};
+        int[] capas = {0, 1, 2, 3, 4, 5};
         mapaRenderer.render(capas);
 
         //ANIMACION DEL JUGADOR
@@ -385,8 +396,6 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         stateTimeNPC += Gdx.graphics.getDeltaTime();
 
-        String infoTesoros = "Tesoros: " + cuentaTesoros;
-        String infoVidas = "Vidas: " + nVidas;
         //Inicializamos el objeto SpriteBatch
         sb.begin();
 
@@ -410,10 +419,6 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             sb.draw(cuadroActual, posicionNPC[i].x, posicionNPC[i].y);
         }
 
-        fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
-        fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
-
-
         //Finalizamos el objeto SpriteBatch
         sb.end();
         //////////////////////
@@ -423,7 +428,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         mapaRenderer.render(capas);
 
         /////////////HUD//////////////
-        /*
+
         String infoTesoros = "Tesoros: " + cuentaTesoros;
         String infoVidas = "Vidas: " + nVidas;
         sb.begin();
@@ -431,13 +436,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
         sb.end();
 
-         */
+
 
         /*
         if (posicionJugador == null) {
             posicionJugador.set(celdaInicial);
         }
          */
+        gameOver();
     }
 
     private Vector2 posicionaMapa(Vector2 celda) {
@@ -496,6 +502,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         if (obstaculo(posicionJugador))
             posicionJugador.set(posicionAnterior);
 
+        //////////////////Prueba//////////////
+        //if(checkpoint(posicionJugador))
+        //    ultimoCheckpointAlcanzado.set(posicionJugador);
+
         //Deteccion de fin del mapa
         if (celdaActual(posicionJugador).epsilonEquals(celdaFinal)) {
             //Paralizamos el juego 1 segundo para reproducir algún efecto sonoro
@@ -512,31 +522,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //////////////////////////////////////////////////////////
 
-        /*
-        // Detección de colisiones con NPC
-        Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.4 * anchoJugador), (float) (posicionJugador.y + 0.4 * altoJugador),
-                (float) (0.2 * anchoJugador), (float) (0.2 * altoJugador));
-        Rectangle rNPC;
-        for (int i = 0; i < numeroNPC; i++) {
-            rNPC = new Rectangle((float) (posicionNPC[i].x + 0.25 * anchoJugador), (float) (posicionNPC[i].y + 0.25 * altoJugador),
-                    (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
-            if (rJugador.overlaps(rNPC)) {
-                // Hay colisión con un NPC, devolver al jugador a la celda inicial
-                posicionJugador.set(posicionaMapa(celdaInicial)); // Restablecer posición del jugador
-                return; // Termina la actualización aquí para evitar que se sobrescriba la posición del jugador
-            }
-        }
-
-         */
-
         ///////////////////////////////////////////////////////////////////
         //Deteccion de tesoros: calculamos la celda en la que se encuentran los límites de la zona de contacto.
-        /*
-        int limIzq = (int) ((posicionJugador.x + 0.25 * anchoJugador) / anchoCelda);
-        int limDrcha = (int) ((posicionJugador.x + 0.75 * anchoJugador) / anchoCelda);
-        int limSup = (int) ((posicionJugador.y + 0.25 * altoJugador) / altoCelda);
-        int limInf = (int) ((posicionJugador.y) / altoCelda);
-         */
+
         int limIzq = (int) ((posicionJugador.x + 0.1 * anchoJugador) / anchoCelda);
         int limDrcha = (int) ((posicionJugador.x + 0.9 * anchoJugador) / anchoCelda);
         int limSup = (int) ((posicionJugador.y + 0.9 * altoJugador) / altoCelda);
@@ -557,6 +545,16 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
             tesoroEncontrado.play();
             cuentaTesoros++;
         }
+
+        if (checkpoint[limIzq][limInf]) {
+            // Actualiza la posición del último checkpoint alcanzado
+            ultimoCheckpointAlcanzado.set(limIzq, limInf);
+            checkpointAlcanzado.play();
+        } else if (checkpoint[limDrcha][limSup]) {
+            // Actualiza la posición del último checkpoint alcanzado
+            ultimoCheckpointAlcanzado.set(limDrcha, limSup);
+            checkpointAlcanzado.play();
+        }
     }
 
     //Metodo que detecta si hay un obstaculo en una determinada posicion
@@ -567,6 +565,15 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         int limInf = (int) ((posicion.y) / altoCelda);
 
         return obstaculo[limIzq][limInf] || obstaculo[limDrcha][limSup];
+    }
+
+    private boolean checkpoint(Vector2 posicion) {
+        int limIzq = (int) ((posicion.x + 0.25 * anchoJugador) / anchoCelda);
+        int limDrcha = (int) ((posicion.x + 0.75 * anchoJugador) / anchoCelda);
+        int limSup = (int) ((posicion.y + 0.25 * altoJugador) / altoCelda);
+        int limInf = (int) ((posicion.y) / altoCelda);
+
+        return checkpoint[limIzq][limInf] || checkpoint[limDrcha][limSup];
     }
 
     //Método que convierte la posición del jugador en la celda en la que está
@@ -750,7 +757,6 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 (float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
         Rectangle rNPC;
         //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
-        //Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
         for (int i = 0; i < numeroNPC; i++) {
             rNPC = new Rectangle((float) (posicionNPC[i].x + 0.1 * anchoJugador), (float) (posicionNPC[i].y + 0.1 * altoJugador),
                     (float) (0.8 * anchoJugador), (float) (0.8 * altoJugador));
@@ -761,6 +767,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                 musicaJuego.pause();
                 //reproducimos el sonido "pillado"
                 pillado.play();
+                nVidas --;
 
                 try {
                     Thread.sleep(2000);
@@ -768,12 +775,18 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
                     e.printStackTrace();
                 }
 
-                //posicionJugador.set(celdaInicial);
-                posicionJugador.set(posicionaMapa(celdaInicial));
+                //posicionJugador.set(posicionaMapa(celdaInicial));
+                posicionJugador.set(posicionaMapa(ultimoCheckpointAlcanzado));
                 musicaJuego.setPosition(posicionMusica);
                 //reanudamos la musica del juego
                 musicaJuego.play();
             }
+        }
+    }
+
+    public void gameOver(){
+        if(nVidas < 0){
+            Gdx.app.exit();
         }
     }
 
@@ -803,6 +816,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         pillado.dispose();
         exito.dispose();
         fracaso.dispose();
+        checkpointAlcanzado.dispose();
 
         pasos.dispose();
 
