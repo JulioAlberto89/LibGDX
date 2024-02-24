@@ -168,8 +168,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         fontTesoros = new BitmapFont(Gdx.files.internal("ui/OldLondon.fnt"));
 
         // Configurar el tamaño de la fuente
-        fontVidas.getData().setScale(0.5f); // Tamaño 0.5f
-        fontTesoros.getData().setScale(0.5f); // Tamaño 0.5f
+        fontVidas.getData().setScale(0.5f);
+        fontTesoros.getData().setScale(0.5f);
 
         cuentaTesoros = 0;
         nVidas = 3;
@@ -225,7 +225,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         //Posiciones inicial y final del recorrido
         celdaInicial = new Vector2(2, 4);
-        celdaFinal = new Vector2(67, 7);
+        celdaFinal = new Vector2(66, 6);
         //El primer checkpoint es el punto inicial
         ultimoCheckpointAlcanzado = celdaInicial;
 
@@ -287,7 +287,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         stateTimeNPC = 0f;
 
         //Velocidad de los NPC
-        velocidadNPC = 1.15f; //Vale cualquier múltiplo de 0.25f
+        velocidadNPC = 1.0f; //Vale cualquier múltiplo de 0.25f
         //Creamos arrays de animaciones para los NPC
         //Las animaciones activas
         npc = new Animation[numeroNPC];
@@ -345,8 +345,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         destino[1] = posicionaMapa(new Vector2(42, 9));
         origen[2] = posicionaMapa(new Vector2(17, 25));
         destino[2] = posicionaMapa(new Vector2(39, 25));
-        origen[3] = posicionaMapa(new Vector2(62, 16));
-        destino[3] = posicionaMapa(new Vector2(73, 16));
+        origen[3] = posicionaMapa(new Vector2(62, 15));
+        destino[3] = posicionaMapa(new Vector2(71, 15));
         //origen[4] = posicionaMapa(new Vector2(23, 8));
         //destino[4] = posicionaMapa(new Vector2(23, 5));
         //POSICION INICIAL DE LOS NPC
