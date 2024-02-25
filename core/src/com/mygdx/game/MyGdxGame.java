@@ -164,8 +164,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
         ///////////////////////////////////////////////////////////////////
         //Textos sobreimpresionados
-        fontVidas = new BitmapFont(Gdx.files.internal("ui/OldLondon.fnt"));
-        fontTesoros = new BitmapFont(Gdx.files.internal("ui/OldLondon.fnt"));
+        fontVidas = new BitmapFont(Gdx.files.internal("ui/OldLondonDos.fnt"));
+        fontTesoros = new BitmapFont(Gdx.files.internal("ui/OldLondonDos.fnt"));
 
         // Configurar el tamaño de la fuente
         fontVidas.getData().setScale(0.5f);
@@ -280,8 +280,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
         cuentaTesoros = 0;
 
         //Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-        //velocidadJugador = 2.25f;
-        velocidadJugador = 6f;
+        velocidadJugador = 2.25f;
+        //velocidadJugador = 1.75f;
         ////////////////////////////////////////////////////////////////////////
         //Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
         stateTimeNPC = 0f;
